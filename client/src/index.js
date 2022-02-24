@@ -3,10 +3,18 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import { Provider } from "react-redux";
+import configureStore from "./store";
 
+const store = configureStore();
+const AppWrapper = ({ children }) => {
+  return (<Provider store={store}>{children}</Provider>);
+}
 ReactDOM.render(
   <React.StrictMode>
+    <AppWrapper>
     <App />
+    </AppWrapper>
   </React.StrictMode>,
   document.getElementById('root')
 );
