@@ -1,44 +1,30 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
-import { useStoreContext } from '../../utils/GlobalState';
-import {
-  UPDATE_CATEGORIES,
-  UPDATE_CURRENT_CATEGORY,
-} from '../../utils/actions';
+import { connect } from "react-redux";
+import { updateCategories, updateCurrentCategory } from "../../actions/productActions";
 import { QUERY_CATEGORIES } from '../../utils/queries';
 import { idbPromise } from '../../utils/helpers';
 
-function CategoryMenu() {
-  const [state, dispatch] = useStoreContext();
-
-  const { categories } = state;
+function CategoryMenu(props) {
+  const { categories, updateCategories, updateCurrentCategory } = props;
 
   const { loading, data: categoryData } = useQuery(QUERY_CATEGORIES);
 
   useEffect(() => {
     if (categoryData) {
-      dispatch({
-        type: UPDATE_CATEGORIES,
-        categories: categoryData.categories,
-      });
+      updateCategories(categoryData.categories);
       categoryData.categories.forEach((category) => {
         idbPromise('categories', 'put', category);
       });
     } else if (!loading) {
       idbPromise('categories', 'get').then((categories) => {
-        dispatch({
-          type: UPDATE_CATEGORIES,
-          categories: categories,
-        });
+        updateCategories(categories);
       });
     }
-  }, [categoryData, loading, dispatch]);
+  }, [categoryData, loading]);
 
   const handleClick = (id) => {
-    dispatch({
-      type: UPDATE_CURRENT_CATEGORY,
-      currentCategory: id,
-    });
+    updateCurrentCategory(id);;
   };
 
   return (
@@ -57,5 +43,13 @@ function CategoryMenu() {
     </div>
   );
 }
-
-export default CategoryMenu;
+const mapStateToProps = (state) => {
+  return {
+    categories: state.productReducer.categories
+  };
+};
+const mapDispatchToProps = (dispatch) => ({
+  updateCategories: (categories) => dispatch(updateCategories(categories)),
+  updateCurrentCategory: (currentCategory) => dispatch(updateCurrentCategory(currentCategory))
+});
+export default connect(mapStateToProps, mapDispatchToProps)(CategoryMenu);
