@@ -22,4 +22,32 @@ export const UPDATE_CURRENT_CATEGORY = "UPDATE_CURRENT_CATEGORY";
       payload: products,
     });
   };
+
+  export const updateCartQuantity = (_id, purchaseQuantity) => (dispatch) => {
+    dispatch({
+      type: "UPDATE_CART_QUANTITY",
+      _id: _id,
+      purchaseQuantity
+    });
+  }
   
+ export const addItemToCart = (item) => (dispatch) => {
+  dispatch({
+    type: "ADD_TO_CART",
+    product: { ...item, purchaseQuantity: 1 }
+  });
+ }
+
+ export const toggleCart = () => (dispatch) => {
+   dispatch({ type: "TOGGLE_CART"});
+ }
+ export const addMultipleToCart = (Products) => (dispatch) => {
+  dispatch({ type: "ADD_MULTIPLE_TO_CART", products: Products });
+ }
+
+ export const removeFromCart = (id) => dispatch => {
+  dispatch({
+    type: "REMOVE_FROM_CART",
+    _id: id,
+  });
+ }

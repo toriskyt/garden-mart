@@ -1,17 +1,13 @@
 import React from 'react';
-import { useStoreContext } from "../../utils/GlobalState";
-import { REMOVE_FROM_CART, UPDATE_CART_QUANTITY } from "../../utils/actions";
+import { connect } from "react-redux";
+import { updateCartQuantity, removeFromCart } from "../../actions/productActions";
 import { idbPromise } from "../../utils/helpers";
 
-const CartItem = ({ item }) => {
+const CartItem = ({ item, removeFromCurrentCart, updateCartQuantity }) => {
 
-  const [, dispatch] = useStoreContext();
 
   const removeFromCart = item => {
-    dispatch({
-      type: REMOVE_FROM_CART,
-      _id: item._id
-    });
+    removeFromCurrentCart(item._id);
     idbPromise('cart', 'delete', { ...item });
 
   };
@@ -19,18 +15,9 @@ const CartItem = ({ item }) => {
   const onChange = (e) => {
     const value = e.target.value;
     if (value === '0') {
-      dispatch({
-        type: REMOVE_FROM_CART,
-        _id: item._id
-      });
-      idbPromise('cart', 'delete', { ...item });
-
+      removeFromCart(item._id);
     } else {
-      dispatch({
-        type: UPDATE_CART_QUANTITY,
-        _id: item._id,
-        purchaseQuantity: parseInt(value)
-      });
+      updateCartQuantity(item._id, parseInt(value));
       idbPromise('cart', 'put', { ...item, purchaseQuantity: parseInt(value) });
 
     }
@@ -67,4 +54,16 @@ const CartItem = ({ item }) => {
   );
 }
 
-export default CartItem;
+const mapStateToProps = (state) => {
+  return {
+    currentCategory: state.productReducer.currentCategory,
+    products: state.productReducer.products,
+    cart: state.productReducer.cart
+  };
+};
+const mapDispatchToProps = (dispatch) => ({
+  updateCartQuantity: (_id, purchaseQuantity) => dispatch(updateCartQuantity(_id, purchaseQuantity)),
+  removeFromCurrentCart: (id) => dispatch(removeFromCart(id))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(CartItem);

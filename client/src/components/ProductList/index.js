@@ -24,7 +24,7 @@ function ProductList(props) {
         updateProducts(products);
       });
     }
-  }, [data, loading]);
+  }, [data, loading, updateProducts]);
 
   function filterProducts() {
     if (!currentCategory) {
@@ -49,6 +49,7 @@ function ProductList(props) {
               name={product.name}
               price={product.price}
               quantity={product.quantity}
+              cart={props.cart}
             />
           ))}
         </div>
@@ -61,10 +62,11 @@ function ProductList(props) {
 }
 
 const mapStateToProps = (state) => {
-  console.log("products: ", state.productReducer.products);
+  console.log("product cart: ", state.productReducer.cart);
   return {
     currentCategory: state.productReducer.currentCategory,
-    products: state.productReducer.products
+    products: state.productReducer.products,
+    cart: state.productReducer.cart
   };
 };
 const mapDispatchToProps = (dispatch) => ({

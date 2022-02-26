@@ -5,14 +5,14 @@ import { QUERY_CHECKOUT } from '../../utils/queries';
 import { idbPromise } from '../../utils/helpers';
 import CartItem from '../CartItem';
 import Auth from '../../utils/auth';
-import { useStoreContext } from '../../utils/GlobalState';
-import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from '../../utils/actions';
+import { connect } from "react-redux";
+import { updateCartQuantity, updateProducts, addItemToCart, removeFromCart, addMultipleToCart, toggleCart } from "../../actions/productActions";
 import './style.css';
 
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
-const Cart = () => {
-  const [state, dispatch] = useStoreContext();
+const Cart = (props) => {
+  const { addMultipleToCart, cart, toggleCart, cartOpen } = props;
   const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
 
   useEffect(() => {
@@ -25,22 +25,22 @@ const Cart = () => {
 
   useEffect(() => {
     async function getCart() {
-      const cart = await idbPromise('cart', 'get');
-      dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
+      const getcart = await idbPromise('cart', 'get');
+      addMultipleToCart([...getcart]);
     }
 
-    if (!state.cart.length) {
+    if (!cart.length) {
       getCart();
     }
-  }, [state.cart.length, dispatch]);
+  }, [addMultipleToCart, cart.length]);
 
-  function toggleCart() {
-    dispatch({ type: TOGGLE_CART });
+  function toggleCurrentCart() {
+    toggleCart();
   }
 
   function calculateTotal() {
     let sum = 0;
-    state.cart.forEach((item) => {
+    cart.forEach((item) => {
       sum += item.price * item.purchaseQuantity;
     });
     return sum.toFixed(2);
@@ -49,7 +49,7 @@ const Cart = () => {
   function submitCheckout() {
     const productIds = [];
 
-    state.cart.forEach((item) => {
+    cart.forEach((item) => {
       for (let i = 0; i < item.purchaseQuantity; i++) {
         productIds.push(item._id);
       }
@@ -60,9 +60,9 @@ const Cart = () => {
     });
   }
 
-  if (!state.cartOpen) {
+  if (!cartOpen) {
     return (
-      <div className="cart-closed" onClick={toggleCart}>
+      <div className="cart-closed" onClick={toggleCurrentCart}>
         <span role="img" aria-label="trash">
           🛒
         </span>
@@ -72,13 +72,13 @@ const Cart = () => {
 
   return (
     <div className="cart">
-      <div className="close" onClick={toggleCart}>
+      <div className="close" onClick={toggleCurrentCart}>
         [close]
       </div>
       <h2>Shopping Cart</h2>
-      {state.cart.length ? (
+      {cart.length ? (
         <div>
-          {state.cart.map((item) => (
+          {cart.map((item) => (
             <CartItem key={item._id} item={item} />
           ))}
 
@@ -103,5 +103,20 @@ const Cart = () => {
     </div>
   );
 };
-
-export default Cart;
+const mapStateToProps = (state) => {
+  return {
+    currentCategory: state.productReducer.currentCategory,
+    products: state.productReducer.products,
+    cart: state.productReducer.cart,
+    cartOpen: state.productReducer.cartOpen
+  };
+};
+const mapDispatchToProps = (dispatch) => ({
+  updateProducts: (products) => dispatch(updateProducts(products)),
+  updateCartQuantity: (_id, purchaseQuantity) => dispatch(updateCartQuantity(_id, purchaseQuantity)),
+  addItemToCart: (item) => dispatch(addItemToCart(item)),
+  removeFromCart: (id) => dispatch(removeFromCart(id)),
+  addMultipleToCart: (products) => dispatch(addMultipleToCart(products)),
+  toggleCart: () => dispatch(toggleCart())
+});
+export default connect(mapStateToProps, mapDispatchToProps)(Cart);
